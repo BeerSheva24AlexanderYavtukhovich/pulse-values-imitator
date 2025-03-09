@@ -16,11 +16,11 @@ public class Main {
     static final int MIN_PULSE_VALUE = 40;
     static final int MAX_PULSE_VALUE = 240;
     static final long TIMEOUT_SEND = 500;
-    static final int TIMEOUT_RESPONSE = 1000;
+    static final int TIMEOUT_RESPONSE = 5000;
     static final String DEFAULT_HOST = "localhost";
     static final int DEFAULT_PORT = 5000;
     static final int DEFAULT_N_PATIENTS = 10;
-    static final int DEFAULT_N_PACKETS = 1000;
+    static final int DEFAULT_N_PACKETS = 100;
     static final int JUMP_PROB = 10;
     static final int MIN_JUMP_PERCENT = 10;
     static final int MAX_JUMP_PERCENT = 100;
@@ -45,6 +45,7 @@ public class Main {
         String jsonStr = sensor.toString();
         try {
             udpSend(jsonStr);
+            Thread.sleep(TIMEOUT_SEND);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -73,34 +74,36 @@ public class Main {
 
     private static int getRandomPulseValue(long patientId) {
         int valueRes = patientIdPulseValue.computeIfAbsent(patientId,
-				k -> getRandomNumber(MIN_PULSE_VALUE, MAX_PULSE_VALUE));
-		if (chance(JUMP_PROB)) {
-			valueRes = getValueWithJump(valueRes);
-			patientIdPulseValue.put(patientId, valueRes);
-		}
+                k -> getRandomNumber(MIN_PULSE_VALUE, MAX_PULSE_VALUE));
+        if (chance(JUMP_PROB)) {
+            valueRes = getValueWithJump(valueRes);
+            patientIdPulseValue.put(patientId, valueRes);
+        }
 
-		return valueRes;
+        return valueRes;
     }
 
     static int getRandomNumber(int minValue, int maxValue) {
         return new Random().nextInt(minValue, maxValue + 1);
     }
+
     private static boolean chance(int prob) {
 
-		return getRandomNumber(0, 99) < prob;
-	}
+        return getRandomNumber(0, 99) < prob;
+    }
+
     private static int getValueWithJump(int previousValue) {
-		int jumpPercent = getRandomNumber(MIN_JUMP_PERCENT, MAX_JUMP_PERCENT);
-		int jumpValue = previousValue * jumpPercent / 100;
-		if (!chance(JUMP_POSITIVE_PROB)) {
-			jumpValue = -jumpValue;
-		}
-		int res = previousValue + jumpValue;
-		if (res < MIN_PULSE_VALUE) {
-			res = MIN_PULSE_VALUE;
-		} else if (res > MAX_PULSE_VALUE) {
-			res = MAX_PULSE_VALUE;
-		}
-		return res;
-	}
+        int jumpPercent = getRandomNumber(MIN_JUMP_PERCENT, MAX_JUMP_PERCENT);
+        int jumpValue = previousValue * jumpPercent / 100;
+        if (!chance(JUMP_POSITIVE_PROB)) {
+            jumpValue = -jumpValue;
+        }
+        int res = previousValue + jumpValue;
+        if (res < MIN_PULSE_VALUE) {
+            res = MIN_PULSE_VALUE;
+        } else if (res > MAX_PULSE_VALUE) {
+            res = MAX_PULSE_VALUE;
+        }
+        return res;
+    }
 }
